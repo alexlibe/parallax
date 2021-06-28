@@ -11,8 +11,11 @@ static void error_callback(int error, const char* description){
     std::cerr << "Error Code: " << error << ", Description: " << description << '\n';
 }
 
+// TODO: Set this into an input class
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    std::cout << "Window: " << window << "\nScancode: " << scancode << "\nMods: " << mods << '\n';
+
     if(action == GLFW_PRESS){
         switch(key){
             case Input::Keycode::One:
@@ -31,7 +34,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-void window::window_init(){
+void Window::window_init(){
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()){
         throw std::runtime_error{ "GLFW failed to initialize" };    
@@ -39,18 +42,18 @@ void window::window_init(){
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(640, 480, settings::name, NULL, NULL);
-    if(!window){
+    window_ = glfwCreateWindow(640, 480, settings::ENGINE_NAME, NULL, NULL);
+    if(!window_){
         glfwTerminate();
         throw std::runtime_error("GLFW failed to create window");
     }
 
-    glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window_, key_callback);
 }
 
-void window::cleanup(){
-    std::cout << "Closing...\n";
+void Window::clean_up(){
+    std::cout << "Cleaning GLFW...\n";
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(window_);
     glfwTerminate();
 }

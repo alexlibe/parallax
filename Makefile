@@ -1,31 +1,41 @@
-EXECUTABLE-NAME = parallax
-BINARY-FOLDER = ./bin
+EXECUTABLE = parallax
+BINARYDIR = ./bin
+INCLUDEDIR = ./include
+BUILDDIR = ./build
+SRCDIR = ./src
+SHADERSDIR = ./shaders
 
-CFLAGS = -std=c++17 -Wall -Wextra -iquote ./include
-LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
+CFLAGS = -std=c++17 -Wall -Wextra -iquote $(INCLUDEDIR)
+LDFLAGS = -lglfw -lvulkan
 
-parallax: src/main.cpp
-	mkdir -p ./bin
+SRC = $(wildcard $(SRCDIR)/*.cpp) $(wildcard $(SRCDIR)/**/*.cpp)
+OBJ = $(SRC:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
+SHADERSRC = $(wildcard $(SHADERSDIR)/*.frag) $(wildcard $(SHADERSDIR)/*.vert)
+
+.PHONY: clean release
+
+# Compile the .o files into a debuggable executable
+${BINARYDIR}/$(EXECUTABLE): $(OBJ)
+	mkdir -p ${BINARYDIR}/shaders
 	
-	g++ $(CFLAGS) -g -o ${BINARY-FOLDER}/${EXECUTABLE-NAME} $(LDFLAGS) ./src/*.cpp ./src/vulkan/*.cpp
-	
-.PHONY: test clean
+	glslangValidator -V -o ${BINARYDIR}/shaders/shaders.frag.spv shaders/shaders.frag
+	glslangValidator -V -o ${BINARYDIR}/shaders/shaders.vert.spv shaders/shaders.vert
+
+	g++ -g -o ${BINARYDIR}/${EXECUTABLE} $(LDFLAGS) $^
+
+# Compile .cpp files into .o
+$(OBJ): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	mkdir -p $(@D)
+
+	g++ $(CFLAGS) -c -g -o $@ $<
 
 release:
-	mkdir -p ./bin
-
-	g++ $(CFLAGS) -O3 -D NDEBUG -o ${BINARY-FOLDER}/${EXECUTABLE-NAME} $(LDFLAGS) ./src/*.cpp ./src/vulkan/*.cpp
-
-shaders:
-	mkdir -p ./bin/shaders
-
-	glslangValidator -V -o ${BINARY-FOLDER}/shaders/shaders.frag.spv shaders/shaders.frag
-	glslangValidator -V -o ${BINARY-FOLDER}/shaders/shaders.vert.spv shaders/shaders.vert
-.PHONY: shaders
-
-test: ${EXECUTABLE-NAME}
-	${BINARY-FOLDER}/${EXECUTABLE-NAME}
+	mkdir -p ${BINARYDIR}/shaders
+	
+	glslangValidator -V -o ${BINARYDIR}/shaders/shaders.frag.spv shaders/shaders.frag
+	glslangValidator -V -o ${BINARYDIR}/shaders/shaders.vert.spv shaders/shaders.vert
+	g++ $(CFLAGS) -O3 -D NDEBUG -o ${BINARYDIR}/${EXECUTABLE} $(LDFLAGS) $(SRC)
 
 clean:
-	rm -rf ./bin/${EXECUTABLE-NAME}
-	rm -rf ./bin/shaders/*
+	rm -rf $(BINARYDIR)
+	rm -rf $(BUILDDIR)

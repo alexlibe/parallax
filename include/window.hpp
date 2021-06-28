@@ -2,12 +2,12 @@
 
 #include <GLFW/glfw3.h>
 
-class window{
+class Window {
 public:
     void window_init();
-    void cleanup();
-    inline GLFWwindow* GetWindow() { return window; }
+    void clean_up();
+    inline GLFWwindow* get_window() { return window_; }
 
 private:
-    GLFWwindow* window;
+    GLFWwindow* window_;
 };
